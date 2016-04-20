@@ -1,11 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "common/nc.h"
+#include "inc/nc.h"
+
+
 
 int main(int argc, char *argv[]) 
 {
 	int n;
 	float *A;
+	int i, j;
+
 
 	return 0;
 }
@@ -21,7 +25,7 @@ int main(int argc, char *argv[])
  const int                  N,
  const float               * A,
  const int                  LDA,
- double                     * X,
+ float                     * X,
  const int                  INCX
  )
 {
@@ -45,12 +49,12 @@ int main(int argc, char *argv[])
  * TRANS: N
  * DIAG:  U
  **********************/
-	static void my_dtrsvLNU
+	static void my_strsvLNU
 (
  const int                  N,
  const float               * A,
  const int                  LDA,
- double                     * X,
+ float                     * X,
  const int                  INCX
  )
 {
@@ -66,6 +70,60 @@ int main(int argc, char *argv[])
 		}
 	}
 	return;
+}
+
+/* Function: trsvLTU
+ * UPLO:  L
+ * TRANS: T
+ * DIAG:  N
+ **********************/
+static void my_strsvLTN
+(
+   const int                  N,
+   const float               * A,
+   const int                  LDA,
+   float                     * X,
+   const int                  INCX
+)
+{
+   int                        i, iaij, ix, j, jaj, jx, ldap1 = LDA + 1;
+   register float            t0;
+
+   for( j = N-1,     jaj  = (N-1)*(ldap1), jx  = (N-1)*INCX;
+        j >= 0; j--, jaj -= ldap1,         jx -= INCX )
+   {
+      t0 = X[jx];
+      for( i = j+1,    iaij  = 1+jaj, ix  = jx + INCX;
+           i < N; i++, iaij += 1,     ix += INCX ) { t0 -= A[iaij] * X[ix]; }
+      t0 /= A[jaj]; X[jx] = t0;
+   }
+}
+
+/* Function: trsvLTU
+ * UPLO:  L
+ * TRANS: T
+ * DIAG:  U
+ **********************/
+static void my_strsvLTU
+(
+   const int                  N,
+   const float               * A,
+   const int                  LDA,
+   float                     * X,
+   const int                  INCX
+)
+{
+   int                        i, iaij, ix, j, jaj, jx, ldap1 = LDA + 1;
+   register float            t0;
+
+   for( j = N-1,     jaj  = (N-1)*(ldap1), jx  = (N-1)*INCX;
+        j >= 0; j--, jaj -= ldap1,         jx -= INCX )
+   {
+      t0 = X[jx];
+      for( i = j+1,    iaij  = 1+jaj, ix  = jx + INCX;
+           i < N; i++, iaij += 1,     ix += INCX ) { t0 -= A[iaij] * X[ix]; }
+      X[jx] = t0;
+   }
 }
 
 /* Function: trsvUNN
@@ -102,7 +160,7 @@ int main(int argc, char *argv[])
  * TRANS: N
  * DIAG:  U
  **********************/
-	static void my_strsvUNN
+	static void my_strsvUNU
 (
  const int                  N,
  const float               * A,
@@ -125,6 +183,58 @@ int main(int argc, char *argv[])
 	return;
 }
 
+/* Function: trsvUTN
+ * UPLO:  U
+ * TRANS: T
+ * DIAG:  N
+ **********************/
+static void my_strsvUTN
+(
+   const int                  N,
+   const float               * A,
+   const int                  LDA,
+   float                     * X,
+   const int                  INCX
+)
+{
+   int                        i, iaij, ix, j, jaj, jx;
+   register float            t0;
+
+   for( j = 0, jaj = 0,jx = 0; j < N; j++, jaj += LDA, jx += INCX )
+   {
+      t0 = X[jx];
+      for( i = 0, iaij = jaj, ix = 0; i < j; i++, iaij += 1, ix += INCX )
+      { t0 -= A[iaij] * X[ix]; }
+      t0 /= A[iaij]; X[jx] = t0;
+   }
+}
+
+/* Function: trsvUTU
+ * UPLO:  U
+ * TRANS: T
+ * DIAG:  U
+ **********************/
+static void my_strsvUTU
+(
+   const int                  N,
+   const float               * A,
+   const int                  LDA,
+   float                     * X,
+   const int                  INCX
+)
+{
+   int                        i, iaij, ix, j, jaj, jx;
+   register float            t0;
+
+   for( j = 0, jaj = 0, jx = 0; j < N; j++, jaj += LDA, jx += INCX )
+   {
+      t0 = X[jx];
+      for( i = 0, iaij = jaj, ix = 0; i < j; i++, iaij += 1, ix += INCX )
+      { t0 -= A[iaij] * X[ix]; }
+      X[jx] = t0;
+   }
+}
+
 
 	static void my_strsv0
 (
@@ -134,7 +244,7 @@ int main(int argc, char *argv[])
  const int                  N,
  const float               * A,
  const int                  LDA,
- double                     * X,
+ float                     * X,
  const int                  INCX
  ) 
 {
@@ -144,26 +254,26 @@ int main(int argc, char *argv[])
 	{
 		if( TRANS == MyNoTrans )
 		{
-			if( DIAG == MyNonUnit ) { my_dtrsvUNN( N,    A, LDA, X, INCX ); }
-			else                     { my_dtrsvUNU( N,    A, LDA, X, INCX ); }
+			if( DIAG == MyNonUnit ) { my_strsvUNN( N,    A, LDA, X, INCX ); }
+			else                     { my_strsvUNU( N,    A, LDA, X, INCX ); }
 		}
 		else
 		{
-			if( DIAG == MyNonUnit ) { my_dtrsvUTN( N,    A, LDA, X, INCX ); }
-			else                     { my_dtrsvUTU( N,    A, LDA, X, INCX ); }
+			if( DIAG == MyNonUnit ) { my_strsvUTN( N,    A, LDA, X, INCX ); }
+			else                     { my_strsvUTU( N,    A, LDA, X, INCX ); }
 		}
 	}
 	else
 	{
 		if( TRANS == MyNoTrans )
 		{
-			if( DIAG == MyNonUnit ) { my_dtrsvLNN( N,    A, LDA, X, INCX ); }
-			else                     { my_dtrsvLNU( N,    A, LDA, X, INCX ); }
+			if( DIAG == MyNonUnit ) { my_strsvLNN( N,    A, LDA, X, INCX ); }
+			else                     { my_strsvLNU( N,    A, LDA, X, INCX ); }
 		}
 		else
 		{
-			if( DIAG == MyNonUnit ) { my_dtrsvLTN( N,    A, LDA, X, INCX ); }
-			else                     { my_dtrsvLTU( N,    A, LDA, X, INCX ); }
+			if( DIAG == MyNonUnit ) { my_strsvLTN( N,    A, LDA, X, INCX ); }
+			else                     { my_strsvLTU( N,    A, LDA, X, INCX ); }
 		}
 	}
 }
@@ -214,7 +324,7 @@ int main(int argc, char *argv[])
  *         On entry, N specifies the order of the matrix A. N must be at
  *         least zero.
  *
- * A       (local input)                 const double *
+ * A       (local input)                 const float *
  *         On entry,  A  points  to an array of size equal to or greater
  *         than LDA * n. Before entry with  UPLO==MyUpper,  the leading
  *         n by n upper triangular  part of the array A must contain the
@@ -232,7 +342,7 @@ int main(int argc, char *argv[])
  *         declared  in  the  calling  (sub) program.  LDA  must  be  at
  *         least MAX(1,n).
  *
- * X       (local input/output)          double *
+ * X       (local input/output)          float *
  *         On entry,  X  is an incremented array of dimension  at  least
  *         ( 1 + ( n - 1 ) * abs( INCX ) )  that  contains the vector x.
  *         Before entry,  the  incremented array  X  must contain  the n
@@ -254,17 +364,17 @@ void my_strsv
    const int                        N,
    const float *                   A,
    const int                        LDA,
-   double *                         X,
+   float *                         X,
    const int                        INCX
 )
 {
    if( ORDER == MyColumnMajor )
    {
-      my_dtrsv0( UPLO, TRANS, DIAG, N, A, LDA, X, INCX );
+      my_strsv0( UPLO, TRANS, DIAG, N, A, LDA, X, INCX );
    }
    else
    {
-      my_dtrsv0( ( UPLO  == MyUpper   ? MyLower : MyUpper   ),
+      my_strsv0( ( UPLO  == MyUpper   ? MyLower : MyUpper   ),
                   ( TRANS == MyNoTrans ? MyTrans : MyNoTrans ),
                   DIAG, N, A, LDA, X, INCX );
    }
