@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "inc/nc.h"
+#include "inc/atlas_enum.h"
+#indlude "inc/atlas_blas.h"
 
 
 
@@ -20,7 +21,7 @@ int main(int argc, char *argv[])
  * TRANS: N
  * DIAG:  N
  **********************/
-	static void my_strsvLNN
+	static void ATL_strsvLNN
 (
  const int                  N,
  const float               * A,
@@ -49,7 +50,7 @@ int main(int argc, char *argv[])
  * TRANS: N
  * DIAG:  U
  **********************/
-	static void my_strsvLNU
+	static void ATL_strsvLNU
 (
  const int                  N,
  const float               * A,
@@ -77,7 +78,7 @@ int main(int argc, char *argv[])
  * TRANS: T
  * DIAG:  N
  **********************/
-static void my_strsvLTN
+static void ATL_strsvLTN
 (
    const int                  N,
    const float               * A,
@@ -104,7 +105,7 @@ static void my_strsvLTN
  * TRANS: T
  * DIAG:  U
  **********************/
-static void my_strsvLTU
+static void ATL_strsvLTU
 (
    const int                  N,
    const float               * A,
@@ -131,7 +132,7 @@ static void my_strsvLTU
  * TRANS: N
  * DIAG:  N
  **********************/
-	static void my_strsvUNN
+	static void ATL_strsvUNN
 (
  const int                  N,
  const float               * A,
@@ -160,7 +161,7 @@ static void my_strsvLTU
  * TRANS: N
  * DIAG:  U
  **********************/
-	static void my_strsvUNU
+	static void ATL_strsvUNU
 (
  const int                  N,
  const float               * A,
@@ -188,7 +189,7 @@ static void my_strsvLTU
  * TRANS: T
  * DIAG:  N
  **********************/
-static void my_strsvUTN
+static void ATL_strsvUTN
 (
    const int                  N,
    const float               * A,
@@ -214,7 +215,7 @@ static void my_strsvUTN
  * TRANS: T
  * DIAG:  U
  **********************/
-static void my_strsvUTU
+static void ATL_strsvUTU
 (
    const int                  N,
    const float               * A,
@@ -236,7 +237,7 @@ static void my_strsvUTU
 }
 
 
-	static void my_strsv0
+	static void ATL_strsv0
 (
  const enum MY_UPLO        UPLO,
  const enum MY_TRANS       TRANS,
@@ -250,30 +251,30 @@ static void my_strsvUTU
 {
 	if( N == 0 ) return;
 
-	if( UPLO == MyUpper )
+	if( UPLO == AtlasUpper )
 	{
-		if( TRANS == MyNoTrans )
+		if( TRANS == AtlasNoTrans )
 		{
-			if( DIAG == MyNonUnit ) { my_strsvUNN( N,    A, LDA, X, INCX ); }
-			else                     { my_strsvUNU( N,    A, LDA, X, INCX ); }
+			if( DIAG == AtlasNonUnit ) { ATL_strsvUNN( N,    A, LDA, X, INCX ); }
+			else                     { ATL_strsvUNU( N,    A, LDA, X, INCX ); }
 		}
 		else
 		{
-			if( DIAG == MyNonUnit ) { my_strsvUTN( N,    A, LDA, X, INCX ); }
-			else                     { my_strsvUTU( N,    A, LDA, X, INCX ); }
+			if( DIAG == AtlasNonUnit ) { ATL_strsvUTN( N,    A, LDA, X, INCX ); }
+			else                     { ATL_strsvUTU( N,    A, LDA, X, INCX ); }
 		}
 	}
 	else
 	{
-		if( TRANS == MyNoTrans )
+		if( TRANS == AtlasNoTrans )
 		{
-			if( DIAG == MyNonUnit ) { my_strsvLNN( N,    A, LDA, X, INCX ); }
-			else                     { my_strsvLNU( N,    A, LDA, X, INCX ); }
+			if( DIAG == AtlasNonUnit ) { ATL_strsvLNN( N,    A, LDA, X, INCX ); }
+			else                     { ATL_strsvLNU( N,    A, LDA, X, INCX ); }
 		}
 		else
 		{
-			if( DIAG == MyNonUnit ) { my_strsvLTN( N,    A, LDA, X, INCX ); }
-			else                     { my_strsvLTU( N,    A, LDA, X, INCX ); }
+			if( DIAG == AtlasNonUnit ) { ATL_strsvLTN( N,    A, LDA, X, INCX ); }
+			else                     { ATL_strsvLTU( N,    A, LDA, X, INCX ); }
 		}
 	}
 }
@@ -283,7 +284,7 @@ static void my_strsvUTU
  * Purpose
  * =======
  *
- * my_dtrsv solves one of the systems of equations
+ * ATL_dtrsv solves one of the systems of equations
  *  
  *     A * x = b,   or   A^T * x = b,
  *  
@@ -299,25 +300,25 @@ static void my_strsvUTU
  * ORDER   (local input)                 const enum MY_ORDER
  *         On entry, ORDER  specifies the storage format of the operands
  *         as follows:                                                  
- *            ORDER = MyRowMajor,                                      
- *            ORDER = MyColumnMajor.                                   
+ *            ORDER = AtlasRowMajor,                                      
+ *            ORDER = AtlasColumnMajor.                                   
  *
  * UPLO    (local input)                 const enum MY_UPLO
  *         On  entry,   UPLO   specifies  whether  the  upper  or  lower
  *         triangular  part  of the array  A  is to be referenced.  When
- *         UPLO==MyUpper, only  the upper triangular part of A is to be
+ *         UPLO==AtlasUpper, only  the upper triangular part of A is to be
  *         referenced, otherwise only the lower triangular part of A is 
  *         to be referenced. 
  *
  * TRANS   (local input)                 const enum MY_TRANS
  *         On entry,  TRANS  specifies  the equations  to  be  solved as
  *         follows:
- *            TRANS==MyNoTrans     A   * x = b,
- *            TRANS==MyTrans       A^T * x = b.
+ *            TRANS==AtlasNoTrans     A   * x = b,
+ *            TRANS==AtlasTrans       A^T * x = b.
  *
  * DIAG    (local input)                 const enum MY_DIAG
  *         On entry,  DIAG  specifies  whether  A  is unit triangular or
- *         not. When DIAG==MyUnit,  A is assumed to be unit triangular,
+ *         not. When DIAG==AtlasUnit,  A is assumed to be unit triangular,
  *         and otherwise, A is not assumed to be unit triangular.
  *
  * N       (local input)                 const int
@@ -326,15 +327,15 @@ static void my_strsvUTU
  *
  * A       (local input)                 const float *
  *         On entry,  A  points  to an array of size equal to or greater
- *         than LDA * n. Before entry with  UPLO==MyUpper,  the leading
+ *         than LDA * n. Before entry with  UPLO==AtlasUpper,  the leading
  *         n by n upper triangular  part of the array A must contain the
  *         upper triangular  matrix and the  strictly  lower  triangular
- *         part of A is not referenced.  When  UPLO==MyLower  on entry,
+ *         part of A is not referenced.  When  UPLO==AtlasLower  on entry,
  *         the  leading n by n lower triangular part of the array A must
  *         contain the lower triangular matrix  and  the  strictly upper
  *         triangular part of A is not referenced.
  *          
- *         Note  that  when  DIAG==MyUnit,  the diagonal elements of  A
+ *         Note  that  when  DIAG==AtlasUnit,  the diagonal elements of  A
  *         not referenced  either,  but are assumed to be unity.
  *
  * LDA     (local input)                 const int
@@ -355,7 +356,7 @@ static void my_strsvUTU
  *
  * ---------------------------------------------------------------------
  */ 
-void my_strsv
+void ATL_strsv
 (
    const enum MY_ORDER             ORDER,
    const enum MY_UPLO              UPLO,
@@ -368,14 +369,14 @@ void my_strsv
    const int                        INCX
 )
 {
-   if( ORDER == MyColumnMajor )
+   if( ORDER == AtlasColumnMajor )
    {
-      my_strsv0( UPLO, TRANS, DIAG, N, A, LDA, X, INCX );
+      ATL_strsv0( UPLO, TRANS, DIAG, N, A, LDA, X, INCX );
    }
    else
    {
-      my_strsv0( ( UPLO  == MyUpper   ? MyLower : MyUpper   ),
-                  ( TRANS == MyNoTrans ? MyTrans : MyNoTrans ),
+      ATL_strsv0( ( UPLO  == AtlasUpper   ? AtlasLower : AtlasUpper   ),
+                  ( TRANS == AtlasNoTrans ? AtlasTrans : AtlasNoTrans ),
                   DIAG, N, A, LDA, X, INCX );
    }
 
